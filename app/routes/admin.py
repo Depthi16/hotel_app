@@ -63,8 +63,15 @@ def dashboard():
     
     # 1. Monthly Bookings (Last 6 Months)
     six_months_ago = datetime.utcnow() - timedelta(days=180)
+    
+    # Select date formatting function based on database engine
+    if db.engine.name == 'postgresql':
+        date_format_func = func.to_char(Booking.created_at, 'Mon')
+    else:
+        date_format_func = func.date_format(Booking.created_at, '%b')
+        
     monthly_stats = db.session.query(
-        func.date_format(Booking.created_at, '%b').label('month'),
+        date_format_func.label('month'),
         func.count(Booking.id).label('count'),
         func.sum(Booking.total_price).label('revenue')
     ).filter(Booking.created_at >= six_months_ago)\
