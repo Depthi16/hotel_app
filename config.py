@@ -16,9 +16,9 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Connection Stability for Cloud (Fixes SSL decryption error)
+    from sqlalchemy.pool import NullPool
     SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_pre_ping": True,
-        "pool_recycle": 280,
+        "poolclass": NullPool,
     }
     
     # Mail Config (Mock)
