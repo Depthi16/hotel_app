@@ -2,8 +2,11 @@ import os
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'super-secret-hotel-key'
-    # Updated to use root as user and root@123 (URL encoded as root%40123) as password
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql+pymysql://root:root@localhost/hotel_db'
+    # Database Config - Handle PostgreSQL and local MySQL fallback
+    db_url = os.environ.get('DATABASE_URL')
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    SQLALCHEMY_DATABASE_URI = db_url or 'mysql+pymysql://root:root@localhost/hotel_db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Mail Config (Mock)
