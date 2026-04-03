@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5 pt-5 fade-in-section">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-8 auth-container">
+            <div class="custom-card text-center position-relative overflow-hidden bg-white shadow-lg border-0" style="border-top: 5px solid var(--primary-blue) !important;">
+                <div class="mb-4 position-relative z-2">
+                    <div class="d-inline-flex justify-content-center align-items-center rounded-circle bg-light mb-3 shadow-sm" style="width: 80px; height: 80px;">
+                        <i class="fa-solid fa-user-shield fa-2x" style="color: var(--primary-blue);"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">Admin Portal</h3>
+                    <p class="text-muted small">Restricted access for staff and administrators only</p>
+                </div>
+                
+                <form method="POST" action="{{ url_for('admin.admin_login') }}" class="text-start position-relative z-2">
+                    <div class="mb-4">
+                        <label for="email" class="form-label fw-bold text-muted small text-uppercase tracking-wide">Administrator Email</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-envelope" style="color: var(--primary-blue);"></i>
+                            <input type="email" class="form-control border-0 bg-light" id="email" name="email" required placeholder="admin@hotel.com">
+                        </div>
+                    </div>
+                    <div class="mb-5">
+                        <label for="password" class="form-label fw-bold text-muted small text-uppercase tracking-wide">Secure Password</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-lock" style="color: var(--primary-blue);"></i>
+                            <input type="password" class="form-control border-0 bg-light" id="password" name="password" required placeholder="••••••••">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase tracking-wide shadow-sm" style="background: var(--primary-blue); border: none;">
+                        Authorize & Login <i class="fa-solid fa-right-to-bracket ms-2"></i>
+                    </button>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('auth.login') }}" class="text-muted small text-decoration-none hover-link">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Back to User Login
+                        </a>
+                    </div>
+                </form>
+                
+                <div class="mt-5 pt-4 border-top position-relative z-2">
+                    <p class="text-muted x-small mb-0">
+                        <i class="fa-solid fa-circle-info me-1"></i> 
+                        Unauthorized access attempts are logged and monitored.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

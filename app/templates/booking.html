@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<div class="container py-5 my-5 fade-in-section">
+    <div class="row g-5">
+        <!-- Room Summary Section -->
+        <div class="col-lg-5">
+            <div class="card room-card shadow-lg h-100 border-0 overflow-hidden" style="border-radius: 24px;">
+                <div class="position-relative">
+                    {% if room.images %}
+                    <div id="roomCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            <div class="carousel-item active">
+                                <img src="{{ room.image_url if room.image_url and room.image_url != '' else 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&auto=format&fit=crop' }}" class="d-block w-100" alt="Main Image" style="height: 350px; object-fit: cover;">
+                            </div>
+                            {% for img in room.images %}
+                            <div class="carousel-item">
+                                <img src="{{ img.image_url }}" class="d-block w-100" alt="Room Detail" style="height: 350px; object-fit: cover;">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                    {% else %}
+                    <img src="{{ room.image_url if room.image_url and room.image_url != '' else 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&auto=format&fit=crop' }}" class="card-img-top" alt="{{ room.type }}" style="height: 350px; object-fit: cover;">
+                    {% endif %}
+                    
+                    <div class="position-absolute top-0 end-0 m-3 z-1">
+                        <span class="badge bg-white text-dark shadow-sm border py-2 px-3 rounded-pill"><i class="fa-solid fa-star text-warning me-1"></i>{{ "%.1f"|format(room.avg_rating) if room.avg_rating > 0 else 'New' }}</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <h3 class="fw-bold text-dark mb-3">{{ room.type }} Room</h3>
+                    
+                    <div class="mb-4">
+                        {% set features = room.features.split(',') if room.features else ['WiFi', 'AC', 'TV'] %}
+                        {% for feature in features %}
+                            <span class="badge bg-light text-muted fw-normal rounded-pill px-3 py-2 mb-2 me-2 border-light border">
+                                <i class="fa-solid fa-check text-success me-1"></i> {{ feature.strip() }}
+                            </span>
+                        {% endfor %}
+                    </div>
+
+                    <div class="p-4 bg-light rounded-4 mb-4 border border-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small text-uppercase fw-bold tracking-wider">Base Rate</span>
+                            <span class="fw-bold text-dark fs-5">₹{{ room.price }} <small class="text-muted fw-normal">/night</small></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small text-uppercase fw-bold tracking-wider">Weekend Surge</span>
+                            <span class="text-accent-gold fw-bold">+20%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Booking Form Section -->
+        <div class="col-lg-7">
+            <div class="custom-card p-4 p-md-5 h-100 bg-white shadow-sm" style="border-radius: 20px;">
+                <div class="mb-4">
+                    <h2 class="fw-bold text-dark mb-2">Reserve Your Stay</h2>
+                    <p class="text-muted">Select your preferred dates to see the estimated total.</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('main.book', room_id=room.id) }}" id="bookingForm">
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label for="check_in" class="form-label small fw-bold text-muted text-uppercase tracking-wide">Check-in Date</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-calendar-check"></i>
+                                <input type="text" class="form-control bg-light border-0" id="check_in" name="check_in" required placeholder="Select check-in">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="check_out" class="form-label small fw-bold text-muted text-uppercase tracking-wide">Check-out Date</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-calendar-xmark"></i>
+                                <input type="text" class="form-control bg-light border-0" id="check_out" name="check_out" required placeholder="Select check-out">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="priceSummaryAlert" class="p-4 rounded-4 bg-light border border-secondary border-opacity-10 mb-4 d-none animate-fade-in shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-calculator me-2 text-muted"></i>Price Estimate</h5>
+                            <span id="nightsCountText" class="badge bg-secondary rounded-pill px-3 py-2">-- Nights</span>
+                        </div>
+                        <hr class="my-3 opacity-10">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Estimated Total (Incl. taxes & surges)</span>
+                            <span id="calculatedTotal" class="fs-2 fw-bold" style="color: var(--primary-blue) !important;">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill mt-2 fs-5 fw-bold shadow" id="submitBtn" disabled>
+                        Confirm Reservation <i class="fa-solid fa-arrow-right ms-2"></i>
+                    </button>
+                    
+                    <div class="mt-4 text-center">
+                        <p class="text-muted small mb-0"><i class="fa-solid fa-lock me-1"></i> Your booking is secure and encrypted.</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const roomId = {{ room.id }};
+        const pricePerNight = {{ room.price }};
+        const checkInInput = document.getElementById('check_in');
+        const checkOutInput = document.getElementById('check_out');
+        const submitBtn = document.getElementById('submitBtn');
+        const priceSummaryAlert = document.getElementById('priceSummaryAlert');
+        const nightsCountText = document.getElementById('nightsCountText');
+        const calculatedTotal = document.getElementById('calculatedTotal');
+        
+        let disabledDates = [];
+        let fpCheckIn;
+        let fpCheckOut;
+
+        // Fetch locked dates from API
+        fetch(`/api/booked_dates/${roomId}`)
+            .then(response => response.json())
+            .then(data => {
+                disabledDates = data;
+                initCalendars();
+            });
+
+        function initCalendars() {
+            fpCheckIn = flatpickr("#check_in", {
+                minDate: "today",
+                disable: disabledDates,
+                dateFormat: "Y-m-d",
+                onChange: function(selectedDates, dateStr, instance) {
+                    fpCheckOut.set('minDate', dateStr);
+                    calculateEstimate();
+                }
+            });
+
+            fpCheckOut = flatpickr("#check_out", {
+                minDate: "today",
+                disable: disabledDates,
+                dateFormat: "Y-m-d",
+                onChange: function(selectedDates, dateStr, instance) {
+                    calculateEstimate();
+                }
+            });
+        }
+
+        function calculateEstimate() {
+            const checkInVal = checkInInput.value;
+            const checkOutVal = checkOutInput.value;
+
+            if (checkInVal && checkOutVal) {
+                const start = new Date(checkInVal);
+                const end = new Date(checkOutVal);
+
+                if (end > start) {
+                    let total = 0;
+                    let current = new Date(start);
+                    let days = 0;
+
+                    while (current < end) {
+                        let dailyPrice = pricePerNight;
+                        // Weekend Surge
+                        if (current.getDay() === 0 || current.getDay() === 6) {
+                            dailyPrice *= 1.20;
+                        }
+                        total += dailyPrice;
+                        current.setDate(current.getDate() + 1);
+                        days++;
+                    }
+
+                    nightsCountText.innerText = `${days} Night(s)`;
+                    calculatedTotal.innerText = `₹${total.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                    priceSummaryAlert.classList.remove('d-none');
+                    submitBtn.disabled = false;
+                } else {
+                    priceSummaryAlert.classList.add('d-none');
+                    submitBtn.disabled = true;
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

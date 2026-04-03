@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 my-5 fade-in-section">
+    <div class="text-center mb-5 pt-3">
+        <h2 class="display-5 fw-bold text-dark">Our Elegant Rooms</h2>
+        <div class="divider mx-auto mt-3"></div>
+        <p class="text-muted mt-4 fs-5">Find the perfect room for your stay.</p>
+    </div>
+
+    <!-- Advanced Search & Filters -->
+    <div class="custom-card p-4 mb-5 shadow-sm position-relative z-2 bg-white" style="border-radius: 16px;">
+        <form method="GET" action="{{ url_for('main.rooms') }}" class="row g-3 align-items-end" id="filterForm">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted text-uppercase tracking-wide">Search Rooms</label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="search" class="form-control bg-light border-0 shadow-none ps-5" value="{{ request.args.get('search', '') }}" placeholder="Search by name or features...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold text-muted text-uppercase tracking-wide">Check-in</label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <input type="text" name="check_in" id="check_in_filter" class="form-control bg-light border-0 shadow-none ps-5 datepicker" value="{{ request.args.get('check_in', '') }}" placeholder="Select Date">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold text-muted text-uppercase tracking-wide">Check-out</label>
+                <div class="input-icon-wrapper">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <input type="text" name="check_out" id="check_out_filter" class="form-control bg-light border-0 shadow-none ps-5 datepicker" value="{{ request.args.get('check_out', '') }}" placeholder="Select Date">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold text-muted text-uppercase tracking-wide">Price Range</label>
+                <div class="d-flex gap-2">
+                    <input type="number" name="min_price" class="form-control form-control-sm bg-light border-0 shadow-none" value="{{ request.args.get('min_price', '') }}" placeholder="Min">
+                    <input type="number" name="max_price" class="form-control form-control-sm bg-light border-0 shadow-none" value="{{ request.args.get('max_price', '') }}" placeholder="Max">
+                </div>
+            </div>
+            <div class="col-md-2 text-end d-flex gap-2 justify-content-end">
+                <a href="{{ url_for('main.rooms') }}" class="btn btn-outline-secondary rounded-pill px-3 py-2">Clear</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 flex-grow-1"><i class="fa-solid fa-filter me-2"></i>Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="row g-4">
+        {% if not rooms %}
+        <div class="col-12 text-center text-muted py-5 my-5 custom-card">
+            <i class="fa-solid fa-magnifying-glass fa-3x mb-3 text-secondary opacity-50"></i>
+            <h4>No rooms match your criteria.</h4>
+            <p>Try adjusting your search or dates.</p>
+        </div>
+        {% else %}
+            {% for room in rooms %}
+            <div class="col-lg-4 col-md-6 mb-4 fade-in-section">
+                <div class="card room-card h-100 position-relative border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
+                    <div class="position-relative overflow-hidden">
+                        <img src="{{ room.image_url if room.image_url and room.image_url != '' else 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&auto=format&fit=crop' }}" class="card-img-top" alt="{{ room.type }}" style="height: 250px; object-fit: cover;">
+                        <div class="position-absolute top-0 end-0 m-3 z-1 d-flex flex-column gap-2">
+                            {% if current_user.is_authenticated %}
+                            <button class="btn btn-white btn-wishlist shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" 
+                                    style="width: 40px; height: 40px; background: white;"
+                                    data-room-id="{{ room.id }}"
+                                    onclick="toggleWishlist(this)">
+                                <i class="{% if current_user.wishlist|selectattr('room_id', 'equalto', room.id)|list %}fa-solid{% else %}fa-regular{% endif %} fa-heart text-danger"></i>
+                            </button>
+                            {% endif %}
+                            {% set avail = room.get_availability_count(check_in|default(None), check_out|default(None)) %}
+                            {% if avail > 0 %}
+                                <span class="badge badge-available shadow-sm">
+                                    {% if avail <= 3 %}
+                                        Only {{ avail }} left!
+                                    {% else %}
+                                        {{ avail }} Available
+                                    {% endif %}
+                                </span>
+                            {% else %}
+                                <span class="badge badge-booked shadow-sm">Sold Out</span>
+                            {% endif %}
+                            {% if room.status == 'maintenance' %}
+                                <span class="badge badge-maintenance shadow-sm">Maintenance</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column bg-white p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h4 class="card-title fw-bold text-dark mb-0">{{ room.type }} Room</h4>
+                            {% if room.avg_rating > 0 %}
+                            <span class="badge bg-light text-dark shadow-sm border"><i class="fa-solid fa-star text-warning me-1"></i>{{ "%.1f"|format(room.avg_rating) }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="features-list mb-3">
+                            {% set features = room.features.split(',') if room.features else ['WiFi', 'AC', 'TV'] %}
+                            {% for feature in features %}
+                                <span class="badge bg-light text-muted fw-normal rounded-pill px-2 py-1 mb-1 me-1 border-light border">
+                                    {{ feature.strip() }}
+                                </span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top">
+                            <span class="price-tag">₹{{ room.price }}<span class="fs-6 text-muted fw-normal" style="font-family: 'Poppins', sans-serif;">/night</span></span>
+                            {% set avail = room.get_availability_count(check_in|default(None), check_out|default(None)) %}
+                            {% if avail > 0 and room.status != 'maintenance' %}
+                                {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                                    <button class="btn btn-secondary rounded-pill px-4" disabled>Admin View</button>
+                                {% else %}
+                                    <a href="{{ url_for('main.book', room_id=room.id) }}" class="btn btn-outline-primary rounded-pill px-4">See Details</a>
+                                {% endif %}
+                            {% else %}
+                                <button class="btn btn-secondary rounded-pill px-4" disabled>Sold Out</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr(".datepicker", {
+            minDate: "today",
+            dateFormat: "Y-m-d",
+        });
+    });
+
+    function toggleWishlist(btn) {
+        const roomId = btn.getAttribute('data-room-id');
+        fetch(`/wishlist/toggle/${roomId}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                const icon = btn.querySelector('i');
+                if (data.status === 'added') {
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid');
+                    showToast('Room added to favorites!');
+                } else if (data.status === 'removed') {
+                    icon.classList.remove('fa-solid');
+                    icon.classList.add('fa-regular');
+                    showToast('Room removed from favorites.');
+                }
+            })
+            .catch(err => console.error('Wishlist error:', err));
+    }
+</script>
+</div>
+{% endblock %}

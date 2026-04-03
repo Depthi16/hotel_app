@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grand Horizon Hotel</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Global Loader -->
+    <div id="global-loader">
+        <div class="loader-spinner"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-navbar">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.index') }}">
+                <i class="fa-solid fa-hotel me-2" style="color: var(--accent-gold); font-size: 1.5rem;"></i>
+                <span class="fs-4">Grand Horizon</span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.rooms') }}">Rooms</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                        <!-- Notifications Bell -->
+                        <li class="nav-item dropdown px-lg-2">
+                            <a class="nav-link dropdown-toggle position-relative px-3" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-bell"></i>
+                                {% set unread_count = current_user.notifications|selectattr('is_read', 'equalto', False)|list|length %}
+                                <span id="notificationBadge" class="position-absolute top-1 start-100 translate-middle badge rounded-circle bg-danger border border-light {% if unread_count == 0 %}d-none{% endif %}" style="padding: 0.35em 0.5em; font-size: 0.6rem;">
+                                    {{ unread_count }}
+                                </span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0 overflow-hidden" aria-labelledby="notifDropdown" style="width: 320px; border-radius: 16px;">
+                                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 fw-bold">Notifications</h6>
+                                    <button class="btn btn-sm btn-link text-decoration-none p-0 text-accent-gold" onclick="markAllRead()">Mark all as read</button>
+                                </div>
+                                <div class="notif-list" style="max-height: 350px; overflow-y: auto;">
+                                    {% if current_user.notifications %}
+                                        {% for notif in current_user.notifications|sort(attribute='created_at', reverse=True) %}
+                                            <div class="p-3 border-bottom notif-item {% if not notif.is_read %}bg-light bg-opacity-50{% endif %}">
+                                                <p class="mb-1 small text-dark">{{ notif.message }}</p>
+                                                <span class="text-muted" style="font-size: 0.7rem;">{{ notif.created_at.strftime('%d %b, %H:%M') }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="p-4 text-center text-muted small">No new notifications</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </li>
+
+                        {% if current_user.role in ['admin', 'staff'] %}
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin Panel</a></li>
+                        {% else %}
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('main.history') }}">My Bookings</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link d-flex align-items-center" href="{{ url_for('main.wishlist') }}">
+                                    <i class="fa-solid fa-heart text-danger me-1"></i> Wishlist
+                                </a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a>
+                        </li>
+                        <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+                            <a class="nav-link btn btn-outline-light px-4 rounded-pill" href="{{ url_for('auth.logout') }}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                        </li>
+                        <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+                            <a class="nav-link btn btn-primary text-white px-4 py-2 rounded-pill shadow-sm" href="{{ url_for('auth.register') }}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages via Custom Toasts -->
+    <div class="toast-container" id="toastPlacement">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {% set toast_class = 'success' if category in ['success', 'message'] else ('error' if category in ['danger', 'error'] else 'info') %}
+                    {% set icon = 'fa-check-circle' if toast_class == 'success' else ('fa-exclamation-circle' if toast_class == 'error' else 'fa-info-circle') %}
+                    <div class="custom-toast {{ toast_class }}">
+                        <div class="d-flex align-items-center">
+                            <i class="fa-solid {{ icon }} fs-4 me-3" style="color: var(--accent-gold);"></i>
+                            <div>
+                                <strong class="d-block text-dark">{{ category|capitalize }}</strong>
+                                <small class="text-muted">{{ message }}</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" style="font-size: 0.8rem;" onclick="this.parentElement.remove();"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-5 text-white">
+        <div class="container">
+            <div class="row gy-4 border-bottom border-secondary pb-4 mb-4">
+                <div class="col-lg-4 col-md-6">
+                    <h4 class="mb-3 d-flex align-items-center"><i class="fa-solid fa-hotel me-2"></i>Grand Horizon</h4>
+                    <p class="text-white-50 pe-lg-4">Experience luxury, comfort, and state-of-the-art facilities like never before. Your perfect getaway awaits.</p>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="mb-3 text-white">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{{ url_for('main.index') }}" class="text-white-50 text-decoration-none small transition-all">Home</a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.rooms') }}" class="text-white-50 text-decoration-none small transition-all">Our Rooms</a></li>
+                        {% if current_user.role not in ['admin', 'staff'] %}
+                        <li class="mb-2"><a href="{{ url_for('main.wishlist') }}" class="text-white-50 text-decoration-none small transition-all">My Wishlist</a></li>
+                        {% endif %}
+                        <li class="mb-2"><a href="{{ url_for('main.contact') }}" class="text-white-50 text-decoration-none small transition-all">Contact Us</a></li>
+                        <hr class="border-secondary my-2">
+                        <li class="mb-2"><a href="{{ url_for('admin.admin_login') }}" class="text-white-50 text-decoration-none small transition-all"><i class="fa-solid fa-lock me-2"></i>Admin Portal</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 col-md-12 text-lg-end">
+                    <h5 class="mb-3 text-white">Connect With Us</h5>
+                    <div class="d-flex justify-content-lg-end gap-3 mt-3">
+                        <a href="#" class="text-white border border-light rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-white border border-light rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white border border-light rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center">
+                <p class="text-white-50 small mb-0">&copy; 2026 Grand Horizon Hotel. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

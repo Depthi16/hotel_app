@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 my-5">
+    <div class="d-flex justify-content-between align-items-center mb-5 pb-3">
+        <div>
+            <h2 class="fw-bold display-6 mb-0">Booking History</h2>
+            <p class="text-muted mt-2">Manage your past and upcoming reservations.</p>
+        </div>
+    </div>
+    
+    {% if not bookings %}
+    <div class="text-center text-muted col-12 my-5 py-5 custom-card bg-white fade-in-section">
+        <div class="d-inline-flex justify-content-center align-items-center rounded-circle bg-light mb-4 text-secondary opacity-50" style="width: 100px; height: 100px;">
+            <i class="fa-solid fa-calendar-times fa-3x"></i>
+        </div>
+        <h4 class="fw-bold text-dark">No bookings found.</h4>
+        <p class="mb-4">You haven't made any bookings yet.</p>
+        <a href="{{ url_for('main.rooms') }}" class="btn btn-primary rounded-pill px-5 py-3 shadow-sm">Explore Rooms to Book</a>
+    </div>
+    {% else %}
+    <div class="row g-4">
+        {% for booking in bookings %}
+        <div class="col-lg-6 fade-in-section">
+            <div class="card custom-card p-0 shadow-sm border-0 position-relative h-100 overflow-hidden">
+                <!-- Status Header Line -->
+                {% set status_color = 'var(--accent-gold)' %}
+                {% if booking.status == 'Confirmed' %} {% set status_color = '#2e7d32' %}
+                {% elif booking.status == 'Cancelled' %} {% set status_color = '#c62828' %}
+                {% elif booking.status == 'Checked-in' %} {% set status_color = '#0288d1' %}
+                {% endif %}
+                <div style="height: 6px; width: 100%; background-color: {{ status_color }};"></div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <span class="text-uppercase small fw-bold tracking-wide text-muted mb-1 d-block">Booking #{{ booking.id }}</span>
+                            <h4 class="card-title fw-bold mb-0 text-dark">{{ booking.room.type }} Room</h4>
+                        </div>
+                        {% if booking.status == 'Confirmed' %}
+                            <span class="badge bg-success fs-6 rounded-pill px-3 py-2 shadow-sm">Confirmed</span>
+                        {% elif booking.status == 'Checked-in' %}
+                            <span class="badge bg-info text-dark fs-6 rounded-pill px-3 py-2 shadow-sm">Checked in</span>
+                        {% elif booking.status == 'Checked-out' %}
+                            <span class="badge bg-secondary fs-6 rounded-pill px-3 py-2 shadow-sm">Checked out</span>
+                        {% else %}
+                            <span class="badge bg-danger fs-6 rounded-pill px-3 py-2 shadow-sm">Cancelled</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="bg-light rounded p-3 mb-4 d-flex justify-content-between align-items-center">
+                        <div class="text-center px-2 border-end border-secondary border-opacity-25" style="flex: 1;">
+                            <span class="d-block text-muted small text-uppercase">Check-in</span>
+                            <strong class="text-dark">{{ booking.check_in.strftime('%d %b, %y') }}</strong>
+                        </div>
+                        <div class="text-center text-muted" style="width: 40px;">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </div>
+                        <div class="text-center px-2 border-start border-secondary border-opacity-25" style="flex: 1;">
+                            <span class="d-block text-muted small text-uppercase">Check-out</span>
+                            <strong class="text-dark">{{ booking.check_out.strftime('%d %b, %y') }}</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4 pb-4 border-bottom">
+                        <div>
+                            <span class="text-muted d-block small text-uppercase">Total Amount</span>
+                            <span class="fs-4 fw-bold text-dark">₹{{ booking.total_price }}</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted d-block small text-uppercase">Payment Status</span>
+                            {% if booking.payment_status == 'Paid' %}
+                                <span class="text-success fw-bold bg-success bg-opacity-10 px-2 py-1 rounded small"><i class="fa-solid fa-check"></i> Paid</span>
+                            {% else %}
+                                <span class="text-danger fw-bold bg-danger bg-opacity-10 px-2 py-1 rounded small"><i class="fa-solid fa-xmark"></i> Unpaid</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% if booking.payment_status == 'Unpaid' and booking.status != 'Cancelled' %}
+                        <a href="{{ url_for('main.payment', booking_id=booking.id) }}" class="btn btn-primary rounded-pill px-4 flex-grow-1">Complete Payment</a>
+                        {% endif %}
+                        
+                        {% if booking.payment_status == 'Paid' %}
+                        <a href="{{ url_for('main.generate_invoice', booking_id=booking.id) }}" class="btn btn-outline-secondary rounded-pill px-4 flex-grow-1 border-opacity-50"><i class="fa-solid fa-download me-2"></i>Invoice</a>
+                        {% endif %}
+
+                        {% if booking.status == 'Checked-out' %}
+                        <a href="{{ url_for('main.rate_stay', booking_id=booking.id) }}" class="btn btn-outline-warning rounded-pill px-4 flex-grow-1 text-dark shadow-sm">
+                            <i class="fa-solid fa-star me-2"></i>Rate Stay
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- My Reviews Section -->
+    <div class="mt-5 pt-5 border-top fade-in-section">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold text-dark mb-0">My Reviews</h3>
+            <span class="badge bg-light text-muted border px-3 py-2 rounded-pill">{{ current_user.reviews|length }} Reviews</span>
+        </div>
+        
+        {% if not current_user.reviews %}
+            <div class="custom-card bg-white p-5 text-center text-muted" style="border-radius: 20px;">
+                <i class="fa-solid fa-comment-dots fa-3x mb-3 opacity-25"></i>
+                <p>You haven't submitted any reviews yet.</p>
+            </div>
+        {% else %}
+            <div class="row g-4">
+                {% for review in current_user.reviews|sort(attribute='created_at', reverse=True) %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card custom-card bg-white p-4 h-100 border-0 shadow-sm" style="border-radius: 20px;">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="fw-bold mb-1 text-primary">{{ review.room.type }}</h5>
+                                    <span class="text-muted small">{{ review.created_at.strftime('%d %b, %Y') }}</span>
+                                </div>
+                                <div class="text-warning">
+                                    {% for i in range(review.rating) %}
+                                        <i class="fa-solid fa-star small"></i>
+                                    {% endfor %}
+                                    {% for i in range(5 - review.rating) %}
+                                        <i class="fa-regular fa-star small opacity-50"></i>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <p class="mb-0 text-dark" style="font-size: 0.95rem; font-style: italic;">"{{ review.comment }}"</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

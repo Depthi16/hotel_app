@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <!-- Header section -->
+            <div class="text-center mb-5 fade-in-section">
+                <h2 class="display-5 fw-bold text-dark">Rate Your Stay</h2>
+                <div class="divider mx-auto mt-3"></div>
+                <p class="text-muted mt-4 fs-5">We value your feedback on your stay at the **{{ booking.room.type }} Room**.</p>
+            </div>
+
+            <!-- Main form card -->
+            <div class="card custom-card p-4 p-md-5 shadow-lg border-0 bg-white fade-in-section" style="border-radius: 30px;">
+                <div class="mb-4 text-center">
+                    <span class="badge bg-light text-muted rounded-pill px-3 py-2 border mb-3">Booking #{{ booking.id }}</span>
+                    <h4 class="fw-bold mb-1">{{ booking.room.type }} Room</h4>
+                    <p class="text-muted small">Stayed from {{ booking.check_in.strftime('%d %b') }} to {{ booking.check_out.strftime('%d %b, %Y') }}</p>
+                </div>
+
+                <form method="POST" id="rateForm" class="mt-4">
+                    <!-- Star Rating (Robust V8 Implementation) -->
+                    <div class="mb-5 text-center">
+                        <label class="form-label fw-bold text-muted small text-uppercase tracking-wide d-block mb-3">Rate your experience</label>
+                        <div class="star-rating-wrapper p-4 bg-light rounded-4 shadow-inner" style="transition: all 0.3s;" id="v8-wrapper-main">
+                            <input type="hidden" name="rating" id="v8-input-main" value="5">
+                            <div class="v8-rating-box d-inline-flex justify-content-center gap-3 mb-2">
+                                {% for i in range(1, 6) %}
+                                <span class="v8-star-box" 
+                                      data-index="{{ i }}" 
+                                      style="cursor: pointer; padding: 5px; transition: transform 0.2s; pointer-events: auto;">
+                                    <i class="fa-solid fa-star v8-star-icon" 
+                                       style="font-size: 3.5rem; color: #ffc107; pointer-events: none;"></i>
+                                </span>
+                                {% endfor %}
+                            </div>
+                            <div class="text-muted fw-bold mt-2">Selection: <span id="v8-val-main" class="text-dark">5</span>/5 Stars</div>
+                        </div>
+                    </div>
+
+                    <!-- Comment area -->
+                    <div class="mb-5">
+                        <label class="form-label fw-bold text-muted small text-uppercase tracking-wide ms-2 mb-3">Share your thoughts</label>
+                        <textarea name="comment" class="form-control border-1 p-3 shadow-none bg-white" 
+                                  rows="6" 
+                                  style="border-radius: 20px; font-size: 1.1rem; border-color: #e2e8f0; pointer-events: auto;" 
+                                  placeholder="What did you love? How can we improve?" required></textarea>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-primary rounded-pill py-3 fw-bold shadow-sm" style="font-size: 1.2rem; pointer-events: auto;">
+                            Submit Your Review
+                        </button>
+                        <a href="{{ url_for('main.history') }}" class="btn btn-outline-secondary rounded-pill py-3 fw-bold border-0">
+                            Maybe Later
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- V8 Standalone JavaScript -->
+<script>
+    (function() {
+        let currentRating = 5;
+
+        function updateStars(container, rating) {
+            const boxes = container.querySelectorAll('.v8-star-box');
+            boxes.forEach((box, i) => {
+                const icon = box.querySelector('.v8-star-icon');
+                if (icon) {
+                    icon.style.setProperty('color', (i < rating) ? '#ffc107' : '#e2e8f0', 'important');
+                }
+            });
+        }
+
+        function init() {
+            const container = document.querySelector('.v8-rating-box');
+            const wrapper = document.getElementById('v8-wrapper-main');
+            const input = document.getElementById('v8-input-main');
+            const valSpan = document.getElementById('v8-val-main');
+
+            if (!container) return;
+
+            // Simple click listener on the container for better reliability
+            container.addEventListener('click', function(e) {
+                const starBox = e.target.closest('.v8-star-box');
+                if (!starBox) return;
+
+                const rating = parseInt(starBox.getAttribute('data-index'));
+                currentRating = rating;
+                
+                if (input) input.value = rating;
+                if (valSpan) valSpan.innerText = rating;
+                
+                updateStars(container, rating);
+
+                // Feedback flash
+                if (wrapper) {
+                    wrapper.style.backgroundColor = '#fff3cd';
+                    setTimeout(() => { wrapper.style.backgroundColor = '#f8f9fa'; }, 150);
+                }
+            });
+
+            // Hover effect
+            container.addEventListener('mouseover', function(e) {
+                const starBox = e.target.closest('.v8-star-box');
+                if (starBox) {
+                    const rating = parseInt(starBox.getAttribute('data-index'));
+                    updateStars(container, rating);
+                }
+            });
+
+            container.addEventListener('mouseout', function() {
+                updateStars(container, currentRating);
+            });
+
+            // Initial Sync
+            updateStars(container, 5);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    })();
+</script>
+
+<style>
+    .shadow-inner {
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+    }
+    .v8-star-box:hover {
+        transform: scale(1.15);
+    }
+    textarea:focus {
+        border-color: var(--accent-gold) !important;
+        box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.1) !important;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5 pt-5 fade-in-section">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-8 auth-container">
+            <div class="custom-card text-center position-relative overflow-hidden bg-white">
+                <div class="mb-4 position-relative z-2">
+                    <div class="d-inline-flex justify-content-center align-items-center rounded-circle bg-light mb-3 shadow-sm" style="width: 80px; height: 80px;">
+                        <i class="fa-solid fa-user-lock fa-2x" style="color: var(--accent-gold);"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">Welcome Back</h3>
+                    <p class="text-muted small">Login to your account to manage your bookings</p>
+                </div>
+                
+                <form method="POST" action="{{ url_for('auth.login') }}" class="text-start position-relative z-2">
+                    <div class="mb-4">
+                        <label for="email" class="form-label fw-bold text-muted small text-uppercase tracking-wide">Email address</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-envelope"></i>
+                            <input type="email" class="form-control" id="email" name="email" required placeholder="Enter your email">
+                        </div>
+                    </div>
+                    <div class="mb-5">
+                        <label for="password" class="form-label fw-bold text-muted small text-uppercase tracking-wide">Password</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" class="form-control" id="password" name="password" required placeholder="Enter your password">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold text-uppercase tracking-wide shadow-sm">Login to Account</button>
+                </form>
+                
+                <div class="text-center mt-5 pt-4 border-top position-relative z-2">
+                    <p class="text-muted small mb-0">Don't have an account? <a href="{{ url_for('auth.register') }}" class="text-decoration-none ms-1" style="color: var(--accent-gold); font-weight: 600;">Create one here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 my-5 fade-in-section">
+    <div class="text-center mb-5 pt-3">
+        <h2 class="display-5 fw-bold text-dark">My Wishlist</h2>
+        <div class="divider mx-auto mt-3"></div>
+        <p class="text-muted mt-4 fs-5">Rooms you've saved for later.</p>
+    </div>
+
+    <div class="row g-4">
+        {% if not rooms %}
+        <div class="col-12 text-center text-muted py-5 my-5 custom-card bg-white">
+            <i class="fa-solid fa-heart-broken fa-3x mb-3 text-secondary opacity-50"></i>
+            <h4>Your wishlist is empty.</h4>
+            <p>Browse our rooms and save your favorites!</p>
+            <a href="{{ url_for('main.rooms') }}" class="btn btn-primary rounded-pill px-4 mt-3">Explore Rooms</a>
+        </div>
+        {% else %}
+            {% for room in rooms %}
+            <div class="col-lg-4 col-md-6 mb-4 fade-in-section">
+                <div class="card room-card h-100 position-relative border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
+                    <div class="position-relative overflow-hidden">
+                        <img src="{{ room.image_url if room.image_url and room.image_url != '' else 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&auto=format&fit=crop' }}" class="card-img-top" alt="{{ room.type }}" style="height: 250px; object-fit: cover;">
+                        <div class="position-absolute top-0 end-0 m-3 z-1 d-flex flex-column gap-2">
+                            <button class="btn btn-white shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" 
+                                    style="width: 40px; height: 40px; background: white; border: none;"
+                                    data-room-id="{{ room.id }}"
+                                    onclick="toggleWishlist(this)">
+                                <i class="fa-solid fa-heart text-danger"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column bg-white p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h4 class="card-title fw-bold text-dark mb-0">{{ room.type }} Room</h4>
+                            {% if room.avg_rating > 0 %}
+                            <span class="badge bg-light text-dark shadow-sm border"><i class="fa-solid fa-star text-warning me-1"></i>{{ "%.1f"|format(room.avg_rating) }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="features-list mb-3">
+                            {% set features = room.features.split(',') if room.features else ['WiFi', 'AC', 'TV'] %}
+                            {% for feature in features %}
+                                <span class="badge bg-light text-muted fw-normal rounded-pill px-2 py-1 mb-1 me-1 border-light border">
+                                    {{ feature.strip() }}
+                                </span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top">
+                            <span class="price-tag">₹{{ room.price }}<span class="fs-6 text-muted fw-normal">/night</span></span>
+                            <a href="{{ url_for('main.book', room_id=room.id) }}" class="btn btn-outline-primary rounded-pill px-4">Book Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

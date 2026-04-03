@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 my-5 fade-in-section">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 border-bottom pb-4">
+        <div>
+            <h2 class="fw-bold display-6 mb-0 text-dark">Admin Dashboard</h2>
+            <p class="text-muted mt-2 mb-0">Overview of hotel operations and performance.</p>
+        </div>
+        <div class="mt-4 mt-md-0 d-flex gap-2">
+            <a href="{{ url_for('admin.manage_rooms') }}" class="btn btn-outline-primary rounded-pill py-2 px-4 shadow-sm"><i class="fa-solid fa-bed me-2"></i>Rooms</a>
+            <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-outline-primary rounded-pill py-2 px-4 shadow-sm"><i class="fa-solid fa-book-open me-2"></i>Bookings</a>
+            <a href="{{ url_for('admin.manage_reviews') }}" class="btn btn-primary rounded-pill py-2 px-4 shadow-sm text-white"><i class="fa-solid fa-star me-2"></i>Reviews</a>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-4 col-md-6">
+            <div class="card custom-card text-white p-4 h-100 border-0 position-relative overflow-hidden" style="background: linear-gradient(135deg, var(--primary-light), var(--primary-blue)) !important; border-radius: 20px;">
+                <div class="position-absolute end-0 bottom-0 opacity-10" style="transform: translate(20%, 20%); z-index: 0;">
+                    <i class="fa-solid fa-clipboard-list" style="font-size: 8rem;"></i>
+                </div>
+                <div class="position-relative z-1 d-flex flex-column h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="fa-solid fa-calendar-check fs-4 text-white"></i>
+                        </div>
+                        <span class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-2">Total Bookings</span>
+                    </div>
+                    <div class="mt-auto">
+                        <h1 class="display-3 fw-bold mb-0 text-white">{{ total_bookings }}</h1>
+                        <p class="text-white-50 mb-0 small">All time reservations</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6">
+            <div class="card custom-card text-white p-4 h-100 border-0 position-relative overflow-hidden" style="background: linear-gradient(135deg, #3dbb60, #1b873c) !important; border-radius: 20px;">
+                <div class="position-absolute end-0 bottom-0 opacity-10" style="transform: translate(20%, 20%); z-index: 0;">
+                    <i class="fa-solid fa-door-open" style="font-size: 8rem;"></i>
+                </div>
+                <div class="position-relative z-1 d-flex flex-column h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="fa-solid fa-key fs-4 text-white"></i>
+                        </div>
+                        <span class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-2">Available Rooms</span>
+                    </div>
+                    <div class="mt-auto">
+                        <h1 class="display-3 fw-bold mb-0 text-white">{{ available_rooms }}</h1>
+                        <p class="text-white-50 mb-0 small">Currently ready to book</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-12">
+            <div class="card custom-card text-white p-4 h-100 border-0 position-relative overflow-hidden" style="background: linear-gradient(135deg, #e3c36f, var(--accent-gold)) !important; border-radius: 20px;">
+                <div class="position-absolute end-0 bottom-0 opacity-25" style="transform: translate(20%, 20%); z-index: 0;">
+                    <i class="fa-solid fa-chart-line" style="font-size: 8rem; color: #a98520;"></i>
+                </div>
+                <div class="position-relative z-1 d-flex flex-column h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="fa-solid fa-wallet fs-4 text-dark"></i>
+                        </div>
+                        <span class="badge bg-white bg-opacity-25 text-dark rounded-pill px-3 py-2">Total Revenue</span>
+                    </div>
+                    <div class="mt-auto">
+                        <h1 class="display-4 fw-bold mb-0 text-dark">₹{{ "{:,.0f}".format(total_revenue|float) if total_revenue else '0' }}</h1>
+                        <p class="text-dark bg-opacity-50 mb-0 small">Total earnings (INR)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+     <div class="row g-4">
+         <div class="col-lg-8">
+            <div class="custom-card bg-white p-4 p-md-5 border border-light h-100">
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <h4 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-chart-line text-muted me-2"></i>Monthly Performance</h4>
+                    <div class="badge bg-light text-muted border px-3 py-2 rounded-pill">Last 6 Months</div>
+                </div>
+                <div style="height: 400px;">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+         </div>
+         <div class="col-lg-4">
+            <div class="custom-card bg-white p-4 p-md-5 border border-light h-100">
+                <h4 class="fw-bold mb-5 text-dark"><i class="fa-solid fa-pie-chart text-muted me-2"></i>Stay Popularity</h4>
+                <div style="height: 300px;">
+                    <canvas id="popularityChart"></canvas>
+                </div>
+                <div class="mt-4 pt-4 border-top">
+                    <p class="text-muted small mb-0">Breakdown of bookings by room category.</p>
+                </div>
+            </div>
+         </div>
+     </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // --- Performance Chart (Line + Bar) ---
+        if(document.getElementById('performanceChart')){
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(10, 25, 47, 0.1)');
+            gradient.addColorStop(1, 'rgba(10, 25, 47, 0.0)');
+            
+            new Chart(ctx, {
+                data: {
+                    labels: {{ line_labels|tojson }},
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Revenue (₹)',
+                            data: {{ line_data_revenue|tojson }},
+                            borderColor: '#C5A059',
+                            backgroundColor: 'transparent',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Bookings',
+                            data: {{ line_data_bookings|tojson }},
+                            backgroundColor: 'rgba(10, 25, 47, 0.05)',
+                            borderRadius: 8,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', ticks: { color: '#C5A059' } },
+                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        }
+
+        // --- Popularity Chart (Pie) ---
+        if(document.getElementById('popularityChart')){
+            const ctxP = document.getElementById('popularityChart').getContext('2d');
+            new Chart(ctxP, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ pie_labels|tojson }},
+                    datasets: [{
+                        data: {{ pie_data|tojson }},
+                        backgroundColor: ['#0A192F', '#C5A059', '#3dbb60', '#e3c36f', '#1b873c'],
+                        borderWidth: 0,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

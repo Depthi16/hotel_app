@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 my-5 fade-in-section">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="custom-card bg-white shadow-sm" style="border-radius: 24px; padding: 50px;">
+                <div class="d-flex align-items-center mb-5 pb-4 border-bottom border-light">
+                    <div class="d-flex align-items-center justify-content-center rounded-circle text-white shadow-sm me-4" 
+                         style="width: 80px; height: 80px; font-size: 32px; background: linear-gradient(135deg, var(--accent-gold), #A67C00); font-family: 'Playfair Display', serif;">
+                        {{ current_user.name[0] | upper }}
+                    </div>
+                    <div>
+                        <h2 class="fw-bold text-dark mb-1">My Account Profile</h2>
+                        <p class="text-muted mb-0 text-uppercase small tracking-widest">{{ current_user.role | capitalize }} Status</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.profile') }}">
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase tracking-wide">Full Guest Name</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-user"></i>
+                                <input type="text" class="form-control bg-light border-0" name="name" value="{{ current_user.name }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase tracking-wide">Registered Email</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-envelope"></i>
+                                <input type="email" class="form-control bg-light border-0 opacity-75" name="email" value="{{ current_user.email }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase tracking-wide">Primary Contact</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-phone"></i>
+                                <input type="text" class="form-control bg-light border-0" name="phone" value="{{ current_user.phone or '' }}" placeholder="Enter mobile number">
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-muted text-uppercase tracking-wide">Permanent Residence Address</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <input type="text" class="form-control bg-light border-0" name="address" value="{{ current_user.address or '' }}" placeholder="Enter full mailing address">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-4 bg-light mb-5 border border-secondary border-opacity-10">
+                        <h5 class="fw-bold text-dark mb-4 d-flex align-items-center"><i class="fa-solid fa-shield-alt text-muted me-2"></i>Account Security</h5>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-muted text-uppercase tracking-wide">New Secure Password</label>
+                            <div class="input-icon-wrapper">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="password" class="form-control bg-white border-0" name="password" placeholder="Leave blank to keep current">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 py-3 shadow-sm fw-bold">
+                            <i class="fa-solid fa-circle-check me-2"></i> Update Profile Details
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

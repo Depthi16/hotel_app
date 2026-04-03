@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 my-5 fade-in-section">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 border-bottom pb-4">
+        <div>
+            <h2 class="fw-bold display-6 mb-0 text-dark">Manage Hotel Inventory</h2>
+            <p class="text-muted mt-2 mb-0">Add or modify room types, pricing, and availability status.</p>
+        </div>
+        <div class="mt-4 mt-md-0">
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+                <i class="fa-solid fa-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Add New Room Form -->
+        {% if current_user.role != 'receptionist' %}
+        <div class="col-lg-4">
+            <div class="custom-card bg-white shadow-sm p-4 p-md-5" style="border-radius: 20px;">
+                <h4 class="fw-bold mb-4 text-dark d-flex align-items-center"><i class="fa-solid fa-plus-circle text-primary me-2"></i>Add New Room</h4>
+                <form method="POST" action="{{ url_for('admin.manage_rooms') }}">
+                    <div class="mb-4">
+                        <label for="type" class="form-label small fw-bold text-muted text-uppercase tracking-wide">Room Type Category</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-bed"></i>
+                            <select class="form-select bg-light border-0 shadow-none" id="type" name="type" required>
+                                <option value="Single">Single Deluxe</option>
+                                <option value="Double">Double Deluxe</option>
+                                <option value="Suite">Executive Suite</option>
+                                <option value="Presidential">Presidential Suite</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="price" class="form-label small fw-bold text-muted text-uppercase tracking-wide">Nightly Rate (₹)</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-indian-rupee-sign"></i>
+                            <input type="number" class="form-control bg-light border-0 shadow-none" id="price" name="price" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="status" class="form-label small fw-bold text-muted text-uppercase tracking-wide">Initial Availability</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-info-circle"></i>
+                            <select class="form-select bg-light border-0 shadow-none" id="status" name="status" required>
+                                <option value="available" selected>Available Immediately</option>
+                                <option value="maintenance">Under Maintenance</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <label for="total_rooms" class="form-label small fw-bold text-muted text-uppercase tracking-wide">Total Units</label>
+                            <input type="number" class="form-control bg-light border-0 shadow-none" id="total_rooms" name="total_rooms" min="1" value="1" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="blocked_rooms" class="form-label small fw-bold text-muted text-uppercase tracking-wide">Blocked / Maint.</label>
+                            <input type="number" class="form-control bg-light border-0 shadow-none" id="blocked_rooms" name="blocked_rooms" min="0" value="0" required>
+                        </div>
+                    </div>
+                    <div class="mb-5">
+                        <label for="image_url" class="form-label small fw-bold text-muted text-uppercase tracking-wide">Room Gallery URL</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-image"></i>
+                            <input type="url" class="form-control bg-light border-0 shadow-none" id="image_url" name="image_url" placeholder="https://unsplash.com/...">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow">Initialize New Room <i class="fa-solid fa-check ms-2"></i></button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Room List -->
+        <div class="{% if current_user.role == 'receptionist' %}col-12{% else %}col-lg-8{% endif %}">
+            <div class="custom-card bg-white shadow-sm p-4 p-md-5 h-100" style="border-radius: 20px;">
+                <h4 class="fw-bold mb-4 text-dark d-flex align-items-center"><i class="fa-solid fa-list text-muted me-2"></i>Existing Inventory</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle border-0">
+                        <thead class="bg-light border-0">
+                            <tr>
+                                <th class="border-0 small text-uppercase py-3">Room Info</th>
+                                <th class="border-0 small text-uppercase py-3">Pricing</th>
+                                <th class="border-0 small text-uppercase py-3 text-center">Inventory (T / B)</th>
+                                <th class="border-0 small text-uppercase py-3 text-center">Status</th>
+                                <th class="border-0 small text-uppercase py-3 text-end px-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="border-0">
+                            {% for room in rooms %}
+                            <tr class="border-bottom border-light">
+                                <td class="py-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0 me-3">
+                                            <img src="{{ room.image_url if room.image_url and room.image_url != '' else 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop' }}" alt="Room" class="rounded-3 shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">{{ room.type }}</div>
+                                            <div class="text-muted small">Reference #{{ room.id }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4">
+                                    <span class="fw-bold text-dark fs-5">₹{{ room.price }}</span><span class="text-muted small">/night</span>
+                                </td>
+                                <td class="py-4 text-center">
+                                    <span class="badge bg-light text-dark border">{{ room.total_rooms }} Total</span>
+                                    <span class="badge bg-light text-danger border ms-1">{{ room.blocked_rooms }} Blocked</span>
+                                </td>
+                                <td class="py-4 text-center">
+                                    {% if room.status == 'available' %}
+                                        <span class="badge badge-available">Live & Ready</span>
+                                    {% elif room.status == 'booked' %}
+                                        <span class="badge badge-booked">Currently Active</span>
+                                    {% else %}
+                                        <span class="badge badge-maintenance">In Repair</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 text-end px-4">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        {% if current_user.role in ['admin', 'manager'] %}
+                                        <a href="{{ url_for('admin.edit_room', room_id=room.id) }}" 
+                                           class="btn btn-sm btn-outline-primary p-2 border-0" 
+                                           title="Edit Room">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                        <a href="{{ url_for('admin.toggle_maintenance', room_id=room.id) }}" 
+                                           class="btn btn-sm p-2 rounded-pill {% if room.status == 'maintenance' %}btn-success shadow-sm{% else %}btn-outline-warning border-0{% endif %}" 
+                                           title="Toggle Maintenance">
+                                            <i class="fa-solid fa-wrench"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if current_user.role == 'admin' %}
+                                        <a href="{{ url_for('admin.delete_room', room_id=room.id) }}" 
+                                           class="btn btn-sm btn-outline-danger p-2 border-0" 
+                                           onclick="return confirm('Immediately remove this room from inventory?');" title="Delete Permanent">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <div class="opacity-25 mb-3"><i class="fa-solid fa-bed fa-3x"></i></div>
+                                    <p class="small">No rooms found in your global inventory database.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

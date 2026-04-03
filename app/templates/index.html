@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="hero position-relative">
+    <div class="container animate-fade-in z-2">
+        <h1 class="display-3 fw-bold text-white mb-3">Experience True Luxury</h1>
+        <p class="lead text-white-50 mb-5 max-w-75 mx-auto">Discover the perfect blend of elegance, comfort, and state-of-the-art facilities at Grand Horizon.</p>
+        <div class="d-flex gap-3 justify-content-center">
+            <a href="{{ url_for('main.rooms') }}" class="btn btn-primary btn-lg rounded-pill px-5 py-3 shadow">Explore Rooms</a>
+            <a href="#services" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 shadow">View Services</a>
+        </div>
+    </div>
+</section>
+
+<section class="container py-5 my-5 fade-in-section">
+    <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold text-dark">{{ recommended_title }}</h2>
+        <div class="divider mx-auto mt-3"></div>
+        <p class="text-muted mt-4">{{ recommended_desc }}</p>
+    </div>
+
+    <div class="row g-4">
+        {% if not rooms %}
+        <div class="col-12 text-center text-muted">
+            <p>No featured rooms available at the moment. Admin needs to add rooms.</p>
+        </div>
+        {% else %}
+            {% for room in rooms %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card room-card h-100 position-relative">
+                    <div class="position-relative overflow-hidden">
+                        <img src="{{ room.image_url if room.image_url and room.image_url != '' else 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&auto=format&fit=crop' }}" class="card-img-top" alt="{{ room.type }}">
+                        <div class="position-absolute top-0 end-0 m-3 z-1 d-flex flex-column gap-2">
+                            {% if current_user.is_authenticated %}
+                            <button class="btn btn-white btn-wishlist shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" 
+                                    style="width: 40px; height: 40px; background: white; border: none;"
+                                    data-room-id="{{ room.id }}"
+                                    onclick="toggleWishlist(this)">
+                                <i class="{% if current_user.wishlist|selectattr('room_id', 'equalto', room.id)|list %}fa-solid{% else %}fa-regular{% endif %} fa-heart text-danger"></i>
+                            </button>
+                            {% endif %}
+                            {% if room.status == 'available' %}
+                                <span class="badge badge-available shadow-sm">Available</span>
+                            {% elif room.status == 'booked' %}
+                                <span class="badge badge-booked shadow-sm">Booked</span>
+                            {% else %}
+                                <span class="badge badge-maintenance shadow-sm">Maintenance</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h4 class="card-title fw-bold text-dark mb-0">{{ room.type }} Room</h4>
+                            {% if room.avg_rating > 0 %}
+                            <span class="badge bg-light text-dark shadow-sm border"><i class="fa-solid fa-star text-warning me-1"></i>{{ "%.1f"|format(room.avg_rating) }}</span>
+                            {% endif %}
+                        </div>
+                        <p class="card-text text-muted mb-4 small flex-grow-1">A perfect choice for comfort and relaxation. Enjoy complimentary breakfast, high-speed Wi-Fi, and 24/7 room service in a modern, luxurious setting.</p>
+                        
+                        <div class="d-flex mb-3 text-muted small pb-3 border-bottom">
+                            <div class="me-3" title="Free Wi-Fi"><i class="fa-solid fa-wifi text-primary me-1" style="color: var(--accent-gold) !important;"></i> Wi-Fi</div>
+                            <div class="me-3" title="TV"><i class="fa-solid fa-tv text-primary me-1" style="color: var(--accent-gold) !important;"></i> TV</div>
+                            <div title="Room Service"><i class="fa-solid fa-bell-concierge text-primary me-1" style="color: var(--accent-gold) !important;"></i> 24/7 Service</div>
+                        </div>
+
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <span class="price-tag">₹{{ room.price }}<span class="fs-6 text-muted fw-normal" style="font-family: 'Poppins', sans-serif;">/night</span></span>
+                            {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                                <button class="btn btn-secondary rounded-pill px-4 btn-sm" disabled>Admin View</button>
+                            {% else %}
+                                <a href="{{ url_for('main.book', room_id=room.id) }}" class="btn btn-outline-primary rounded-pill px-4">Book Now</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</section>
+
+<!-- Amenities Section -->
+<section id="services" class="bg-light py-5 fade-in-section">
+    <div class="container my-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-dark display-5">Our Premium Services</h2>
+            <div class="divider mx-auto mt-3"></div>
+            <p class="text-muted mt-4">We offer the best facilities to make your stay unforgettable.</p>
+        </div>
+        <div class="row text-center g-4 mt-2">
+            <div class="col-md-3 col-sm-6">
+                <div class="custom-card p-4 h-100 bg-white">
+                    <i class="fa-solid fa-wifi fa-3x mb-4 text-primary" style="color: var(--accent-gold) !important;"></i>
+                    <h5 class="fw-bold">Free High-Speed Wi-Fi</h5>
+                    <p class="text-muted small mt-2">Stay connected with our seamless internet connection anywhere in the hotel.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="custom-card p-4 h-100 bg-white">
+                    <i class="fa-solid fa-water-ladder fa-3x mb-4 text-primary" style="color: var(--accent-gold) !important;"></i>
+                    <h5 class="fw-bold">Infinity Swimming Pool</h5>
+                    <p class="text-muted small mt-2">Relax in our temperature-controlled infinity pool with city views.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="custom-card p-4 h-100 bg-white">
+                    <i class="fa-solid fa-utensils fa-3x mb-4 text-primary" style="color: var(--accent-gold) !important;"></i>
+                    <h5 class="fw-bold">Gourmet Restaurant</h5>
+                    <p class="text-muted small mt-2">Dine in our multi-cuisine restaurant with award-winning chefs.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="custom-card p-4 h-100 bg-white">
+                    <i class="fa-solid fa-spa fa-3x mb-4 text-primary" style="color: var(--accent-gold) !important;"></i>
+                    <h5 class="fw-bold">Luxury Spa</h5>
+                    <p class="text-muted small mt-2">Rejuvenate your senses with our world-class spa and massage treatments.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonial Section Placeholder (Newly Added) -->
+<section class="container py-5 my-5 fade-in-section">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-dark display-5">What Our Guests Say</h2>
+        <div class="divider mx-auto mt-3"></div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="custom-card h-100 border-0 bg-white text-center">
+                <div class="text-warning mb-3">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                </div>
+                <p class="fst-italic text-muted">"An absolutely phenomenal stay! The staff was incredibly welcoming, and the room was beyond luxurious."</p>
+                <h6 class="fw-bold mt-4">- Sarah Jenkins</h6>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="custom-card h-100 border-0 bg-white text-center">
+                <div class="text-warning mb-3">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star text-muted"></i>
+                </div>
+                <p class="fst-italic text-muted">"Great amenities, beautiful pool, and the restaurant food is top tier. Will be visiting again soon."</p>
+                <h6 class="fw-bold mt-4">- Michael Rossi</h6>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="custom-card h-100 border-0 bg-white text-center">
+                <div class="text-warning mb-3">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                </div>
+                <p class="fst-italic text-muted">"The perfect weekend getaway. Room service was remarkably fast and high quality."</p>
+                <h6 class="fw-bold mt-4">- Priya Sharma</h6>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

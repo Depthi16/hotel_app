@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 my-5 fade-in-section">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 border-bottom pb-4">
+        <div>
+            <h2 class="fw-bold display-6 mb-0 text-dark">Guest Reservations</h2>
+            <p class="text-muted mt-2 mb-0">Monitor and manage all active and past guest bookings.</p>
+        </div>
+        <div class="mt-4 mt-md-0">
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+                <i class="fa-solid fa-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="custom-card bg-white shadow-sm p-4 p-md-5 h-100 border-0" style="border-radius: 20px;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle border-0">
+                <thead class="bg-light border-0">
+                    <tr>
+                        <th class="border-0 small text-uppercase py-3">Reservation ID</th>
+                        <th class="border-0 small text-uppercase py-3">Guest Profile</th>
+                        <th class="border-0 small text-uppercase py-3">Booking Details</th>
+                        <th class="border-0 small text-uppercase py-3 text-center">Stay Duration</th>
+                        <th class="border-0 small text-uppercase py-3 text-center">Status Control</th>
+                        <th class="border-0 small text-uppercase py-3 text-end px-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="border-0">
+                    {% for booking in bookings %}
+                    <tr class="border-bottom border-light">
+                        <td class="py-4">
+                            <span class="rounded-pill bg-light text-dark px-3 py-1 border small">#{{ booking.id }}</span>
+                        </td>
+                        <td class="py-4">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white me-3 bg-opacity-75 bg-primary" 
+                                     style="width: 42px; height: 42px; font-weight: bold; background-color: var(--primary-light);">
+                                    {{ booking.user.name[0]|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ booking.user.name }}</div>
+                                    <div class="text-muted extra-small" style="font-size: 11px;">{{ booking.user.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4">
+                            <div class="fw-bold text-dark">{{ booking.room.type }} Room</div>
+                            <div class="text-muted small">₹{{ booking.total_price }} Total Pay</div>
+                        </td>
+                        <td class="py-4 text-center">
+                            <div class="small fw-bold text-dark">{{ booking.check_in.strftime('%d %b') }} - {{ booking.check_out.strftime('%d %b, %y') }}</div>
+                            <div class="text-muted extra-small" style="font-size: 10px;">{{ (booking.check_out - booking.check_in).days }} Night(s)</div>
+                        </td>
+                        <td class="py-4">
+                            <form method="POST" action="{{ url_for('admin.update_booking', booking_id=booking.id) }}" class="d-flex align-items-center justify-content-center">
+                                <div class="input-group input-group-sm" style="width: 170px;">
+                                    <select name="status" class="form-select bg-light border-0 shadow-none small fw-bold 
+                                        {% if booking.status in ['Confirmed', 'Checked-in'] %}text-success{% elif booking.status == 'Cancelled' %}text-danger{% endif %}" 
+                                        style="font-size: 12px; border-radius: 20px 0 0 20px !important;">
+                                        <option value="Confirmed" {% if booking.status == 'Confirmed' %}selected{% endif %}>✅ Confirmed</option>
+                                        <option value="Confirmed" {% if booking.status == 'Confirmed' %}selected{% endif %}>✅ Confirmed</option>
+                                        <option value="Checked-in" {% if booking.status == 'Checked-in' %}selected{% endif %}>🔑 Checked-in</option>
+                                        <option value="Checked-out" {% if booking.status == 'Checked-out' %}selected{% endif %}>🚪 Checked-out</option>
+                                        <option value="Cancelled" {% if booking.status == 'Cancelled' %}selected{% endif %}>❌ Cancelled</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary d-flex align-items-center" style="border-radius: 0 20px 20px 0 !important;">
+                                        <i class="fa-solid fa-check" style="font-size: 10px;"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </td>
+                        <td class="py-4 text-end px-4">
+                            {% if booking.status not in ['Cancelled', 'Checked-out'] %}
+                            <form method="POST" action="{{ url_for('admin.update_booking', booking_id=booking.id) }}" class="d-inline">
+                                <input type="hidden" name="status" value="Cancelled">
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill border-opacity-25 px-3" onclick="return confirm('Immediately cancel this guest reservation?');">
+                                    <i class="fa-solid fa-xmark me-1 small"></i> Cancel
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted extra-small fst-italic">Archived</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <div class="opacity-25 mb-3"><i class="fa-solid fa-calendar-xmark fa-3x"></i></div>
+                            <h5 class="fw-bold">No active reservations found.</h5>
+                            <p class="small">The database doesn't historical records for this filter.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
