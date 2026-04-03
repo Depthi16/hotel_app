@@ -95,4 +95,8 @@ def create_app():
         app.register_blueprint(auth, url_prefix='/auth')
         app.register_blueprint(admin, url_prefix='/admin')
         
+        # FIX: Dispose of the engine to prevent shared connections across Gunicorn worker forks.
+        # This forces each worker to create its own fresh, safe SSL connection.
+        db.engine.dispose()
+        
         return app
