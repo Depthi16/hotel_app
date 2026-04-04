@@ -207,9 +207,6 @@ def book(room_id):
 
         # Critical Backend Upgrade: Concurrent Booking Protection using row-level locking
         try:
-            # Start strict transaction
-            db.session.begin_nested()
-            
             # Lock the room row for updates
             locked_room = Room.query.with_for_update().get(room_id)
             
@@ -217,30 +214,29 @@ def book(room_id):
             available_count = locked_room.get_availability_count(check_in_date, check_out_date)
 
             if available_count <= 0:
-                db.session.rollback()
                 flash(f'Sorry! This room type is now sold out for these dates.', 'danger')
                 return redirect(url_for('main.book', room_id=room.id))
                 
-            # Insert Pending booking
+            # Insert Confirmed booking
             new_booking = Booking(
                 user_id=current_user.id,
                 room_id=locked_room.id,
                 check_in=check_in_date,
                 check_out=check_out_date,
                 total_price=total_price,
-                status='Pending',
-                payment_status='Unpaid'
+                status='Confirmed',
+                payment_status='Paid'
             )
             db.session.add(new_booking)
             
             # Create Notification
-            notif = Notification(user_id=current_user.id, message=f"Dates reserved for {locked_room.type} room. Please pay to confirm.")
+            notif = Notification(user_id=current_user.id, message=f"Booking confirmed for {locked_room.type} room from {check_in_date} to {check_out_date}!")
             db.session.add(notif)
             
             db.session.commit()
             
-            flash('Dates reserved! Please complete your payment to confirm.', 'info')
-            return redirect(url_for('main.payment', booking_id=new_booking.id))
+            flash('Booking successful! Your stay is confirmed.', 'success')
+            return redirect(url_for('main.history'))
             
         except OperationalError:
             db.session.rollback()

@@ -37,7 +37,25 @@ def create_app():
         # Create database tables for our data models
         db.create_all()
         
+        # --- ROBUST SCHEMA SYNC (For existing databases on Render) ---
+        from sqlalchemy import text
         try:
+            # 1. Total Rooms
+            try:
+                db.session.execute(text("ALTER TABLE rooms ADD COLUMN total_rooms INTEGER DEFAULT 1"))
+                db.session.commit()
+            except Exception:
+                db.session.rollback() # Column likely already exists
+
+            # 2. Blocked Rooms
+            try:
+                db.session.execute(text("ALTER TABLE rooms ADD COLUMN blocked_rooms INTEGER DEFAULT 0"))
+                db.session.commit()
+            except Exception:
+                db.session.rollback() # Column likely already exists
+        except Exception as e:
+            print(f"Schema sync info: {e}")
+            db.session.rollback()
             # --- SEED ADMIN & ROOMS ---
             # 1. Create a Built-in Admin User if none exists
             admin_email = 'admin@hotel.com'
